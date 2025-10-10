@@ -1,0 +1,498 @@
+variables:
+  stripe_account: ''
+  oms_manual_ingestion_id: ''
+  bank_manual_ingestion_id: ''
+  oms_account: ''
+  stripe_manual_ingestion_id: ''
+  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXJjaGFudF9pZCI6Inp1cmljaF9yZWNvbl9kZW1vIiwicHJvZmlsZV9pZCI6InByb19lbUJiUkk1VU9QcXp4VWt0RlR1QyIsImV4cCI6MTc2MDE4NDExNX0.GusInbTY3KOOy44LcNhxg_vYVHyNS8HyeeQl0qa5WsI
+  bank_account: ''
+  adyen_account: ''
+  profile_id: pro_emBbRI5UOPqzxUktFTuC
+  adyen_manual_ingestion_id: ''
+  merchant_id: zurich_recon_demo
+requests:
+- name: Generate JWT token
+  method: POST
+  endpoint: /auth/generate_token
+  payload:
+    merchant_id: ${merchant_id}
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 200
+  save_as: jwt_token
+  extract_path: $.token
+  save_multiple: null
+- name: Create OMS Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Zurich OMS
+    account_type: credit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: oms_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Stripe Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Stripe
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: stripe_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Adyen Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Adyen
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: adyen_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Bank Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Bank
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: bank_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create adyen manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${adyen_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Adyen Settlement Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: adyen_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create stripe manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${stripe_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Stripe Settlement
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: stripe_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create oms manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${oms_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: OMS Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: oms_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create bank manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${bank_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Bank Statement Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: bank_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create adyen webhook ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${adyen_account}
+    config:
+      adyen:
+        hmac_secret: '*********************'
+        psp: adyen
+        report_basic_auth_password: '********'
+        report_basic_auth_username: Juspay
+        webhook_basic_auth_password: '********'
+        webhook_basic_auth_username: Juspay
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Adyen Settlement Webhook
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: adyen_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create OMS transformation
+  method: POST
+  endpoint: /transformations/configs
+  payload:
+    account_id: ${oms_account}
+    config:
+      account_id: ${oms_account}
+      column_mapping:
+        amount_column: amount
+        currency_column: currency
+        date_column: order_date
+        direction_column: type
+      direction_mapping:
+        credit_values:
+        - payment
+        debit_values:
+        - refund
+      merchant_id: ${merchant_id}
+      processing_mode: transaction
+      profile_id: ${profile_id}
+      transformation_type: generic
+      unique_field: metadata.order_id
+      version: v1
+    ingestion_id: ${oms_manual_ingestion_id}
+    is_active: true
+    name: OMS Transactions
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create stripe confirmation transformation
+  method: POST
+  endpoint: /transformations/configs
+  payload:
+    account_id: ${stripe_account}
+    config:
+      account_id: ${stripe_account}
+      column_mapping:
+        amount_column: amount
+        currency_column: currency
+        date_column: settlement_date
+        direction_column: type
+      direction_mapping:
+        credit_values:
+        - refund
+        debit_values:
+        - settled
+      merchant_id: ${merchant_id}
+      processing_mode: confirmation
+      profile_id: ${profile_id}
+      transformation_type: generic
+      unique_field: metadata.merchant_reference
+      version: v1
+    ingestion_id: ${stripe_manual_ingestion_id}
+    is_active: true
+    name: Stripe Confirmations
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create stripe transaction transformation
+  method: POST
+  endpoint: /transformations/configs
+  payload:
+    account_id: ${stripe_account}
+    config:
+      account_id: ${stripe_account}
+      column_mapping:
+        amount_column: amount
+        currency_column: currency
+        date_column: settlement_date
+        direction_column: type
+      direction_mapping:
+        credit_values:
+        - settled
+        debit_values:
+        - refund
+      merchant_id: ${merchant_id}
+      processing_mode: transaction
+      profile_id: ${profile_id}
+      transformation_type: generic
+      unique_field: metadata.settlement_id
+      version: v1
+    ingestion_id: ${stripe_manual_ingestion_id}
+    is_active: true
+    name: Stripe Settlements
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create adyen confirmation transformation
+  method: POST
+  endpoint: /transformations/configs
+  payload:
+    account_id: ${adyen_account}
+    config:
+      account_id: ${adyen_account}
+      column_mapping:
+        amount_column: amount
+        currency_column: currency
+        date_column: settlement_date
+        direction_column: type
+      direction_mapping:
+        credit_values:
+        - refund
+        debit_values:
+        - settled
+      merchant_id: ${merchant_id}
+      processing_mode: confirmation
+      profile_id: ${profile_id}
+      transformation_type: generic
+      unique_field: metadata.merchant_reference
+      version: v1
+    ingestion_id: ${adyen_manual_ingestion_id}
+    is_active: true
+    name: Adyen Confirmations
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create adyen transaction transformation
+  method: POST
+  endpoint: /transformations/configs
+  payload:
+    account_id: ${adyen_account}
+    config:
+      account_id: ${adyen_account}
+      column_mapping:
+        amount_column: amount
+        currency_column: currency
+        date_column: settlement_date
+        direction_column: type
+      direction_mapping:
+        credit_values:
+        - settled
+        debit_values:
+        - refund
+      merchant_id: ${merchant_id}
+      processing_mode: transaction
+      profile_id: ${profile_id}
+      transformation_type: generic
+      unique_field: metadata.settlement_id
+      version: v1
+    ingestion_id: ${adyen_manual_ingestion_id}
+    is_active: true
+    name: Adyen Settlements
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create bank transformation
+  method: POST
+  endpoint: /transformations/configs
+  payload:
+    account_id: ${bank_account}
+    config:
+      account_id: ${bank_account}
+      column_mapping:
+        amount_column: amount
+        currency_column: currency
+        date_column: settlement_date
+        direction_column: type
+      direction_mapping:
+        credit_values:
+        - credit
+        debit_values:
+        - debit
+      merchant_id: ${merchant_id}
+      processing_mode: confirmation
+      profile_id: ${profile_id}
+      transformation_type: generic
+      unique_field: metadata.batch_id
+      version: v1
+    ingestion_id: ${bank_manual_ingestion_id}
+    is_active: true
+    name: Bank Statement
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create OMS - Stripe recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 1
+    rule_description: Reconciliation between Zurich OMS and Stripe
+    rule_name: Zurich OMS <-> Stripe
+    sources:
+    - account_id: ${oms_account}
+      trigger:
+        field: metadata.psp_type
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: Stripe
+    targets:
+    - account_id: ${stripe_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: metadata.order_id
+        target_field: metadata.merchant_reference
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create OMS - Adyen recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 2
+    rule_description: Reconciliation between Zurich OMS and Adyen
+    rule_name: Zurich OMS <-> Adyen
+    sources:
+    - account_id: ${oms_account}
+      trigger:
+        field: metadata.psp_type
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: Adyen
+    targets:
+    - account_id: ${adyen_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: metadata.order_id
+        target_field: metadata.merchant_reference
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create Stripe - Bank recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 3
+    rule_description: Reconciliation between Stripe and Bank
+    rule_name: Stripe <-> Bank
+    sources:
+    - account_id: ${stripe_account}
+      trigger:
+        field: currency
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: USD
+    targets:
+    - account_id: ${bank_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: metadata.settlement_id
+        target_field: metadata.batch_id
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create Adyen - Bank recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 4
+    rule_description: Reconciliation between Adyen and Bank
+    rule_name: Adyen <-> Bank
+    sources:
+    - account_id: ${adyen_account}
+      trigger:
+        field: currency
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: USD
+    targets:
+    - account_id: ${bank_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: metadata.settlement_id
+        target_field: metadata.batch_id
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null

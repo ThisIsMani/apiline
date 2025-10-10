@@ -1,0 +1,84 @@
+# Simple API Testing Example
+# This example demonstrates basic API testing workflow
+# using JSONPlaceholder (a free testing API)
+
+variables:
+  base_url: "https://jsonplaceholder.typicode.com"
+  user_id: "1"
+  post_id: ""
+  comment_id: ""
+
+requests:
+  # 1. Get all posts (no auth required)
+  - name: "Fetch all posts"
+    method: "GET"
+    endpoint: "/posts"
+    auth: "none"
+    expected_status: 200
+
+  # 2. Get a specific post
+  - name: "Fetch specific post"
+    method: "GET"
+    endpoint: "/posts/${user_id}"
+    auth: "none"
+    expected_status: 200
+
+  # 3. Get user information
+  - name: "Fetch user information"
+    method: "GET"
+    endpoint: "/users/${user_id}"
+    auth: "none"
+    expected_status: 200
+
+  # 4. Create a new post
+  - name: "Create new post"
+    method: "POST"
+    endpoint: "/posts"
+    auth: "none"
+    expected_status: 201
+    payload:
+      title: "APIline Test Post"
+      body: "This is a test post created using APIline"
+      userId: 1
+    save_as: "post_id"
+    extract_path: "$.id"
+
+  # 5. Update the created post
+  - name: "Update the created post"
+    method: "PUT"
+    endpoint: "/posts/${post_id}"
+    auth: "none"
+    expected_status: 200
+    payload:
+      id: "${post_id}"
+      title: "Updated APIline Test Post"
+      body: "This post has been updated using APIline"
+      userId: 1
+
+  # 6. Get comments for a post
+  - name: "Fetch comments for post"
+    method: "GET"
+    endpoint: "/posts/1/comments"
+    auth: "none"
+    expected_status: 200
+
+  # 7. Create a comment
+  - name: "Create comment on post"
+    method: "POST"
+    endpoint: "/comments"
+    auth: "none"
+    expected_status: 201
+    payload:
+      postId: 1
+      name: "APIline Test Comment"
+      email: "test@apiline.com"
+      body: "This is a test comment created using APIline"
+    save_as: "comment_id"
+    extract_path: "$.id"
+
+  # 8. Delete the comment (will return 200 but not actually delete in JSONPlaceholder)
+  - name: "Delete the created comment"
+    method: "DELETE"
+    endpoint: "/comments/${comment_id}"
+    auth: "none"
+    expected_status: 200

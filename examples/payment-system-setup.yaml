@@ -1,0 +1,279 @@
+# Payment System Setup Example
+# This example shows setting up a complete payment reconciliation system
+# with multiple PSPs (Payment Service Providers) and accounts
+
+variables:
+  merchant_id: "demo_merchant"
+  profile_id: "demo_profile"
+  jwt_token: ""  # Will be populated by the first request
+  oms_account: ""
+  stripe_account: ""
+  adyen_account: ""
+  bank_account: ""
+  oms_ingestion_id: ""
+  stripe_ingestion_id: ""
+  adyen_ingestion_id: ""
+  bank_ingestion_id: ""
+
+requests:
+  # 1. Authentication - Generate JWT token
+  - name: "Generate JWT token for merchant access"
+    method: "POST"
+    endpoint: "/auth/generate_token"
+    auth: "admin"
+    expected_status: 200
+    payload:
+      merchant_id: "${merchant_id}"
+      profile_id: "${profile_id}"
+    save_as: "jwt_token"
+    extract_path: "$.token"
+
+  # 2. Create accounts for different systems
+  - name: "Create OMS Account (Order Management System)"
+    method: "POST"
+    endpoint: "/accounts"
+    auth: "jwt"
+    expected_status: 201
+    payload:
+      account_name: "Order Management System"
+      account_type: "credit"
+      currency: "USD"
+      initial_balance: 0.0
+    save_as: "oms_account"
+    extract_path: "$.account_id"
+
+  - name: "Create Stripe Payment Account"
+    method: "POST"
+    endpoint: "/accounts"
+    auth: "jwt"
+    expected_status: 201
+    payload:
+      account_name: "Stripe Payments"
+      account_type: "debit"
+      currency: "USD"
+      initial_balance: 0.0
+    save_as: "stripe_account"
+    extract_path: "$.account_id"
+
+  - name: "Create Adyen Payment Account"
+    method: "POST"
+    endpoint: "/accounts"
+    auth: "jwt"
+    expected_status: 201
+    payload:
+      account_name: "Adyen Payments"
+      account_type: "debit"
+      currency: "USD"
+      initial_balance: 0.0
+    save_as: "adyen_account"
+    extract_path: "$.account_id"
+
+  - name: "Create Bank Settlement Account"
+    method: "POST"
+    endpoint: "/accounts"
+    auth: "jwt"
+    expected_status: 201
+    payload:
+      account_name: "Bank Settlements"
+      account_type: "debit"
+      currency: "USD"
+      initial_balance: 0.0
+    save_as: "bank_account"
+    extract_path: "$.account_id"
+
+  # 3. Create data ingestion configurations
+  - name: "Setup OMS data ingestion (manual upload)"
+    method: "POST"
+    endpoint: "/ingestions/config"
+    auth: "admin"
+    expected_status: 201
+    payload:
+      merchant_id: "${merchant_id}"
+      profile_id: "${profile_id}"
+      name: "OMS Manual Upload"
+      account_id: "${oms_account}"
+      config:
+        manual: null
+      is_active: true
+    save_as: "oms_ingestion_id"
+    extract_path: "$.ingestion_id"
+
+  - name: "Setup Stripe data ingestion (manual upload)"
+    method: "POST"
+    endpoint: "/ingestions/config"
+    auth: "admin"
+    expected_status: 201
+    payload:
+      merchant_id: "${merchant_id}"
+      profile_id: "${profile_id}"
+      name: "Stripe Settlement Reports"
+      account_id: "${stripe_account}"
+      config:
+        manual: null
+      is_active: true
+    save_as: "stripe_ingestion_id"
+    extract_path: "$.ingestion_id"
+
+  - name: "Setup Adyen webhook ingestion (automated)"
+    method: "POST"
+    endpoint: "/ingestions/config"
+    auth: "admin"
+    expected_status: 201
+    payload:
+      merchant_id: "${merchant_id}"
+      profile_id: "${profile_id}"
+      name: "Adyen Settlement Webhook"
+      account_id: "${adyen_account}"
+      is_active: true
+      config:
+        adyen:
+          psp: "adyen"
+          hmac_secret: "your_webhook_secret_here"
+          webhook_basic_auth_username: "webhook_user"
+          webhook_basic_auth_password: "webhook_pass"
+          report_basic_auth_username: "report_user"
+          report_basic_auth_password: "report_pass"
+    save_as: "adyen_ingestion_id"
+    extract_path: "$.ingestion_id"
+
+  - name: "Setup Bank statement ingestion (manual upload)"
+    method: "POST"
+    endpoint: "/ingestions/config"
+    auth: "admin"
+    expected_status: 201
+    payload:
+      merchant_id: "${merchant_id}"
+      profile_id: "${profile_id}"
+      name: "Bank Statement Upload"
+      account_id: "${bank_account}"
+      config:
+        manual: null
+      is_active: true
+    save_as: "bank_ingestion_id"
+    extract_path: "$.ingestion_id"
+
+  # 4. Create data transformation configurations
+  - name: "Setup OMS transaction transformation"
+    method: "POST"
+    endpoint: "/transformations/configs"
+    auth: "admin"
+    expected_status: 201
+    payload:
+      name: "OMS Transaction Processing"
+      ingestion_id: "${oms_ingestion_id}"
+      account_id: "${oms_account}"
+      profile_id: "${profile_id}"
+      config:
+        version: "v1"
+        transformation_type: "generic"
+        account_id: "${oms_account}"
+        profile_id: "${profile_id}"
+        merchant_id: "${merchant_id}"
+        processing_mode: "transaction"
+        column_mapping:
+          date_column: "order_date"
+          amount_column: "amount"
+          currency_column: "currency"
+          direction_column: "type"
+        direction_mapping:
+          credit_values: ["payment", "sale"]
+          debit_values: ["refund", "chargeback"]
+        unique_field: "metadata.order_id"
+      is_active: true
+
+  - name: "Setup Stripe settlement transformation"
+    method: "POST"
+    endpoint: "/transformations/configs"
+    auth: "admin"
+    expected_status: 201
+    payload:
+      name: "Stripe Settlement Processing"
+      ingestion_id: "${stripe_ingestion_id}"
+      account_id: "${stripe_account}"
+      profile_id: "${profile_id}"
+      config:
+        version: "v1"
+        transformation_type: "generic"
+        account_id: "${stripe_account}"
+        profile_id: "${profile_id}"
+        merchant_id: "${merchant_id}"
+        processing_mode: "transaction"
+        column_mapping:
+          date_column: "settlement_date"
+          amount_column: "amount"
+          currency_column: "currency"
+          direction_column: "type"
+        direction_mapping:
+          credit_values: ["payment", "settled"]
+          debit_values: ["refund", "fee"]
+        unique_field: "metadata.settlement_id"
+      is_active: true
+
+  # 5. Create reconciliation rules
+  - name: "Create OMS-Stripe reconciliation rule"
+    method: "POST"
+    endpoint: "/recon_rules"
+    auth: "jwt"
+    expected_status: 201
+    payload:
+      rule_name: "OMS to Stripe Reconciliation"
+      rule_description: "Match orders from OMS with Stripe settlements"
+      priority: 1
+      sources:
+        - account_id: "${oms_account}"
+          trigger:
+            trigger_version: "v1"
+            field: "metadata.psp_type"
+            operator:
+              operator_version: "v1"
+              value: "equals"
+            value: "Stripe"
+      targets:
+        - account_id: "${stripe_account}"
+          match_rules:
+            match_version: "v1"
+            rules:
+              - source_field: "amount"
+                target_field: "amount"
+                operator: "equals"
+              - source_field: "currency"
+                target_field: "currency"
+                operator: "equals"
+          search_identifier:
+            search_version: "v1"
+            source_field: "metadata.order_id"
+            target_field: "metadata.merchant_reference"
+
+  - name: "Create Stripe-Bank reconciliation rule"
+    method: "POST"
+    endpoint: "/recon_rules"
+    auth: "jwt"
+    expected_status: 201
+    payload:
+      rule_name: "Stripe to Bank Reconciliation"
+      rule_description: "Match Stripe settlements with bank deposits"
+      priority: 2
+      sources:
+        - account_id: "${stripe_account}"
+          trigger:
+            trigger_version: "v1"
+            field: "currency"
+            operator:
+              operator_version: "v1"
+              value: "equals"
+            value: "USD"
+      targets:
+        - account_id: "${bank_account}"
+          match_rules:
+            match_version: "v1"
+            rules:
+              - source_field: "amount"
+                target_field: "amount"
+                operator: "equals"
+              - source_field: "currency"
+                target_field: "currency"
+                operator: "equals"
+          search_identifier:
+            search_version: "v1"
+            source_field: "metadata.settlement_id"
+            target_field: "metadata.batch_id"
