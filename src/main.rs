@@ -69,7 +69,29 @@ fn save_config(config_path: &Path, config: &ApilineConfig) -> Result<()> {
     let yaml_content = serde_yaml::to_string(config)
         .context("Failed to serialize config to YAML")?;
 
-    std::fs::write(config_path, yaml_content)
+    // Add blank lines between requests for readability
+    let mut in_requests = false;
+    let mut first_request = true;
+    let mut formatted_lines: Vec<String> = Vec::new();
+
+    for line in yaml_content.lines() {
+        if line == "requests:" {
+            in_requests = true;
+        }
+
+        if in_requests && line.starts_with("- name:") {
+            if !first_request {
+                formatted_lines.push(String::new()); // Add blank line
+            }
+            first_request = false;
+        }
+
+        formatted_lines.push(line.to_string());
+    }
+
+    let formatted_content = formatted_lines.join("\n");
+
+    std::fs::write(config_path, formatted_content)
         .with_context(|| format!("Failed to write config to {:?}", config_path))?;
 
     Ok(())
