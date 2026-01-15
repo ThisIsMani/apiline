@@ -419,10 +419,11 @@ async fn execute_request_with_option(
     };
 
     // Show request preview
+    let substituted_endpoint = substitute_variables_in_string(&request.endpoint, &config.variables);
     println!("\n{}", "📋 Request Preview:".bold().yellow());
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("Method: {}", request.method.to_uppercase().magenta());
-    println!("URL: {}{}", base_url.cyan(), request.endpoint.cyan());
+    println!("URL: {}{}", base_url.cyan(), substituted_endpoint.cyan());
     println!("Auth: {}", request.auth.blue());
 
     if let Some(ref payload) = payload {
@@ -460,6 +461,7 @@ async fn execute_request_with_option(
         &config.variables.get("jwt_token").unwrap_or(&String::new()),
         &request,
         payload,
+        &config.variables,
     )
     .await?;
 
@@ -527,6 +529,15 @@ fn substitute_variables(
     Ok(())
 }
 
+fn substitute_variables_in_string(s: &str, variables: &HashMap<String, String>) -> String {
+    let mut result = s.to_string();
+    for (var_name, var_value) in variables {
+        let placeholder = format!("${{{}}}", var_name);
+        result = result.replace(&placeholder, var_value);
+    }
+    result
+}
+
 async fn make_api_call(
     client: &Client,
     base_url: &str,
@@ -534,8 +545,10 @@ async fn make_api_call(
     jwt_token: &str,
     request: &ApiRequest,
     payload: Option<serde_json::Value>,
+    variables: &HashMap<String, String>,
 ) -> Result<serde_json::Value> {
-    let url = format!("{}{}", base_url, request.endpoint);
+    let endpoint = substitute_variables_in_string(&request.endpoint, variables);
+    let url = format!("{}{}", base_url, endpoint);
 
     let method = match request.method.to_uppercase().as_str() {
         "GET" => reqwest::Method::GET,
