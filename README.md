@@ -96,6 +96,8 @@ requests:
     payload:              # Optional, for POST/PUT requests
       key: "value"
       user_id: "${user_id}"
+    files:                # Optional, sends multipart/form-data when present
+      file: "./path/to/file.csv"
     save_as: "variable_name"      # Optional, save entire response
     extract_path: "$.field_name"  # Optional, extract specific field
     save_multiple:                # Optional, save multiple fields
@@ -139,6 +141,22 @@ Once APIline starts, you can use these commands:
 - **`none`** - No authentication
 - **`Bearer <token>`** - Custom bearer token
 - **`api-key:<value>`** - Custom API key
+
+## File Uploads
+
+Add a `files` map to send a request as `multipart/form-data`. Keys are multipart field names and values are file paths. File paths support `${variable_name}` substitution.
+
+```yaml
+requests:
+  - name: "Upload CSV"
+    method: "POST"
+    endpoint: "/ingestions/${ingestion_id}/upload"
+    auth: "jwt"
+    files:
+      file: "./files/report.csv"
+```
+
+Relative paths are resolved from the current working directory first, then relative to the YAML config file.
 
 ## Variable Substitution
 

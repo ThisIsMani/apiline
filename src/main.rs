@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use colored::*;
-use notify::{Watcher, RecursiveMode, Event, event::EventKind};
-use reqwest::Client;
+use notify::{event::EventKind, Event, RecursiveMode, Watcher};
+use reqwest::{multipart, Client};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::io::{self, Write};
@@ -43,6 +43,8 @@ struct ApiRequest {
     method: String,
     endpoint: String,
     payload: Option<serde_json::Value>,
+    #[serde(default)]
+    files: Option<HashMap<String, String>>,
     auth: String,
     #[serde(default = "default_status")]
     expected_status: u16,
@@ -66,8 +68,8 @@ fn load_config(config_path: &Path) -> Result<ApilineConfig> {
 }
 
 fn save_config(config_path: &Path, config: &ApilineConfig) -> Result<()> {
-    let yaml_content = serde_yaml::to_string(config)
-        .context("Failed to serialize config to YAML")?;
+    let yaml_content =
+        serde_yaml::to_string(config).context("Failed to serialize config to YAML")?;
 
     // Add blank lines between requests for readability
     let mut in_requests = false;
@@ -112,16 +114,21 @@ async fn main() -> Result<()> {
                 let _ = tx.send(());
             }
         }
-    }).context("Failed to create file watcher")?;
+    })
+    .context("Failed to create file watcher")?;
 
-    watcher.watch(&args.config, RecursiveMode::NonRecursive)
+    watcher
+        .watch(&args.config, RecursiveMode::NonRecursive)
         .context("Failed to watch config file")?;
 
     let client = Client::new();
     let base_url = args.base_url;
     let default_api_key = args.api_key;
 
-    println!("{}", "🚀 APIline - Interactive API Workflow Tool".bold().blue());
+    println!(
+        "{}",
+        "🚀 APIline - Interactive API Workflow Tool".bold().blue()
+    );
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("{}", format!("📁 Watching: {:?}", args.config).dimmed());
     println!("{}", "💡 Config will auto-reload on file changes".dimmed());
@@ -145,7 +152,10 @@ async fn main() -> Result<()> {
                     }
 
                     println!("{}", "✅ Config reloaded successfully!".green());
-                    println!("{}", "   Variables from previous session preserved".dimmed());
+                    println!(
+                        "{}",
+                        "   Variables from previous session preserved".dimmed()
+                    );
                 }
                 Err(e) => {
                     println!("{}", format!("❌ Failed to reload config: {}", e).red());
@@ -460,6 +470,20 @@ async fn execute_request_with_option(
         println!("Payload: {}", "None".dimmed());
     }
 
+    if let Some(files) = &request.files {
+        if files.is_empty() {
+            println!("Files: {}", "None".dimmed());
+        } else {
+            println!("Files:");
+            for (field_name, file_path) in files {
+                let substituted_path = substitute_variables_in_string(file_path, &config.variables);
+                println!("  {}: {}", field_name.yellow(), substituted_path.cyan());
+            }
+        }
+    } else {
+        println!("Files: {}", "None".dimmed());
+    }
+
     // Ask for confirmation (unless skipped)
     if !skip_confirmation {
         print!("\n{} [Y/n]: ", "Execute this request?".bold());
@@ -484,6 +508,7 @@ async fn execute_request_with_option(
         &request,
         payload,
         &config.variables,
+        config_path,
     )
     .await?;
 
@@ -515,7 +540,11 @@ async fn execute_request_with_option(
                 println!("{}", "   📝 Variables saved to config file".dimmed());
             }
             Err(e) => {
-                println!("   {}  {}", "⚠️  Warning: Failed to save config:".yellow(), e);
+                println!(
+                    "   {}  {}",
+                    "⚠️  Warning: Failed to save config:".yellow(),
+                    e
+                );
             }
         }
     }
@@ -568,6 +597,7 @@ async fn make_api_call(
     request: &ApiRequest,
     payload: Option<serde_json::Value>,
     variables: &HashMap<String, String>,
+    config_path: &Path,
 ) -> Result<serde_json::Value> {
     let endpoint = substitute_variables_in_string(&request.endpoint, variables);
     let url = format!("{}{}", base_url, endpoint);
@@ -581,9 +611,7 @@ async fn make_api_call(
         _ => return Err(anyhow::anyhow!("Unsupported method: {}", request.method)),
     };
 
-    let mut req = client
-        .request(method, &url)
-        .header("Content-Type", "application/json");
+    let mut req = client.request(method, &url);
 
     match request.auth.as_str() {
         "admin" => {
@@ -604,8 +632,21 @@ async fn make_api_call(
         _ => return Err(anyhow::anyhow!("Unknown auth type: {}", request.auth)),
     }
 
-    if let Some(payload) = payload {
-        req = req.json(&payload);
+    if let Some(files) = &request.files {
+        if !files.is_empty() {
+            let form = build_multipart_form(files, payload, variables, config_path).await?;
+            req = req.multipart(form);
+        } else if let Some(payload) = payload {
+            req = req
+                .header("Content-Type", "application/json")
+                .json(&payload);
+        }
+    } else if let Some(payload) = payload {
+        req = req
+            .header("Content-Type", "application/json")
+            .json(&payload);
+    } else {
+        req = req.header("Content-Type", "application/json");
     }
 
     let response = req.send().await.context("Failed to send request")?;
@@ -643,6 +684,59 @@ async fn make_api_call(
 
     serde_json::from_str(&response_text)
         .with_context(|| format!("Failed to parse JSON response: {}", response_text))
+}
+
+async fn build_multipart_form(
+    files: &HashMap<String, String>,
+    payload: Option<serde_json::Value>,
+    variables: &HashMap<String, String>,
+    config_path: &Path,
+) -> Result<multipart::Form> {
+    let mut form = multipart::Form::new();
+
+    if let Some(serde_json::Value::Object(map)) = payload {
+        for (field_name, value) in map {
+            let field_value = match value {
+                serde_json::Value::Null => continue,
+                serde_json::Value::String(value) => value,
+                other => other.to_string(),
+            };
+            form = form.text(field_name, field_value);
+        }
+    }
+
+    for (field_name, file_path) in files {
+        let substituted_path = substitute_variables_in_string(file_path, variables);
+        let resolved_path = resolve_file_path(&substituted_path, config_path);
+        let file_data = tokio::fs::read(&resolved_path).await.with_context(|| {
+            format!("Failed to read file for field '{field_name}': {resolved_path:?}")
+        })?;
+        let file_name = resolved_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| {
+                anyhow::anyhow!("Invalid file name for field '{field_name}': {resolved_path:?}")
+            })?
+            .to_string();
+
+        let part = multipart::Part::bytes(file_data).file_name(file_name);
+        form = form.part(field_name.clone(), part);
+    }
+
+    Ok(form)
+}
+
+fn resolve_file_path(file_path: &str, config_path: &Path) -> PathBuf {
+    let path = PathBuf::from(file_path);
+
+    if path.is_absolute() || path.exists() {
+        path
+    } else {
+        config_path
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .join(path)
+    }
 }
 
 fn extract_json_path(response: &serde_json::Value, path: &str) -> Result<Option<String>> {
