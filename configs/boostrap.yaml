@@ -1,0 +1,55 @@
+variables:
+  oms_account: account_eUuOsBM5XLDQQwZuuG7s
+  oms_manual_ingestion_id: ing_SIRE0GcnI0ZYLdVu0hyt
+  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYzMwYzliZTktOTIxOC00MDRjLThjYTYtODAzMDBiYjE1ZjI2IiwibWVyY2hhbnRfaWQiOiJtZXJjaGFudF8xNzc5MjczMDI1Iiwicm9sZV9pZCI6Im9yZ19hZG1pbiIsImV4cCI6MTc4MDc2NjM2NCwib3JnX2lkIjoib3JnX0VXRlc2Z2ZrWGs1OFZITjhsaGN6IiwicHJvZmlsZV9pZCI6InByb18xbEl1dmRxQVFkdGJqeWNPN1FNWiIsInRlbmFudF9pZCI6InB1YmxpYyJ9.4bggOEVau37eQW6H8Vw2jdqcMXmpvB2ZRQgvpdeMgL8
+  adyen_account: account_8YLErpd61RQ4DrlDVVLD
+  bank_account: account_44AgELsEXIeaZK8VnURA
+  adyen_ingestion_id: ing_yYq2NaBScMDEUym0TG4Y
+  stripe_manual_ingestion_id: ing_wuitWFr2mrsH6fLKaYD5
+  bank_manual_ingestion_id: ing_68Z9SSxtl6fUscPXWRjr
+  adyen_manual_ingestion_id: ing_QE5DvKiB2nRH9cShjg8B
+  merchant_id: merchant_1768571891
+  stripe_account: account_dfoVSp7YW4bjhDfJebL9
+  profile_id: pro_zftg3ASN1qd4ozx4RVVI
+requests:
+- name: Bootstrap
+  method: POST
+  endpoint: /auth/bootstrap_with_ids
+  payload:
+    merchant_name: "Aman Test"
+    profile_name: "Aman Test 2"
+    merchant_id: ${merchant_id}
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 200
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Start Recon
+  method: POST
+  endpoint: /recon_engine/processor/status
+  payload:
+    status: running
+  auth: admin
+  expected_status: 200
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Stop Recon
+  method: POST
+  endpoint: /recon_engine/processor/status
+  payload:
+    status: stopped
+  auth: admin
+  expected_status: 200
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Get Recon Running status
+  method: GET
+  endpoint: /recon_engine/processor/status
+  auth: admin
+  expected_status: 200
+  save_as: null
+  extract_path: null
+  save_multiple: null

@@ -1,0 +1,691 @@
+variables:
+  oms_manual_ingestion_id: ing_IdeWANiOP1oE7VR86TKa
+  oms_account: account_OvAgixuKCh1BNtcfG4Fc
+  adyen_manual_ingestion_id: ing_snv5kRplRu5vZ95WP8If
+  adyen_ingestion_id: ing_jLT3M7453P1iFDuoSupT
+  stripe_manual_ingestion_id: ing_zdaFDeiYP5ZXLRsP1Sml
+  merchant_id: merchant_1768821064
+  stripe_account: account_tWgr6B89YGH1mn4Hh3yN
+  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXJjaGFudF9pZCI6Im1lcmNoYW50XzE3Njg4MjEwNjQiLCJwcm9maWxlX2lkIjoicHJvXzl1b1M2OUdZWlZMWGcwVUU0M3pVIiwiZXhwIjoxNzY4OTEwMzg5fQ.rwiy1DQZyUFtxC2gG18RLfVVaGStU3eKjbQObXld-6M
+  profile_id: pro_9uoS69GYZVLXg0UE43zU
+  bank_manual_ingestion_id: ing_EnthDpsXT4OqnXEizTF0
+  adyen_account: account_f91gl8awA9jYkfFMAC1R
+  bank_account: account_cVuPDYmVYhK2uxlV97hL
+requests:
+- name: Generate JWT token
+  method: POST
+  endpoint: /auth/generate_token
+  payload:
+    merchant_id: ${merchant_id}
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 200
+  save_as: jwt_token
+  extract_path: $.token
+  save_multiple: null
+- name: Create OMS Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: OMS
+    account_type: credit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: oms_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Stripe Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Stripe
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: stripe_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Adyen Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Adyen
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: adyen_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Bank Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Bank
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: bank_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create adyen manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${adyen_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Adyen Settlement Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: adyen_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create stripe manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${stripe_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Stripe Settlement Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: stripe_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create oms manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${oms_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: OMS Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: oms_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create bank manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${bank_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Bank Statement Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: bank_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create adyen webhook ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${adyen_account}
+    config:
+      adyen:
+        hmac_secret: '*********************'
+        psp: adyen
+        report_basic_auth_password: '********'
+        report_basic_auth_username: Juspay
+        webhook_basic_auth_password: '********'
+        webhook_basic_auth_username: Juspay
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Adyen Settlement Webhook
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: adyen_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create OMS transformation 2
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${oms_account}
+    config:
+      account_id: ${oms_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${oms_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_config: null
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - payment
+          debit_values:
+          - refund
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: order_date
+        metadata_fields:
+        - description: Order ID from OMS
+          field_name: metadata.order_id
+          field_type: string
+          identifier: order_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        - description: PSP Type from OMS
+          field_name: metadata.psp_type
+          field_type: string
+          identifier: psp_type
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 1
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: order_id
+          transformation_rules: []
+      processing_mode: transaction
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Order ID must be unique across all transactions
+    name: OMS Transactions
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create stripe confirmation transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${stripe_account}
+    config:
+      account_id: ${stripe_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${stripe_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - refund
+          debit_values:
+          - settled
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Merchant Reference from Stripe Confirmation
+          field_name: metadata.merchant_reference
+          field_type: string
+          identifier: merchant_reference
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: merchant_reference
+          transformation_rules: []
+      processing_mode: confirmation
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Merchant Reference must be unique across all transactions
+    name: Stripe Confirmations
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create stripe transaction transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${stripe_account}
+    config:
+      account_id: ${stripe_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${stripe_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - settled
+          debit_values:
+          - refund
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Settlement ID from Stripe Settlement
+          field_name: metadata.settlement_id
+          field_type: string
+          identifier: settlement_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: settlement_id
+          transformation_rules: []
+      processing_mode: transaction
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Settlement Id must be unique across all transactions
+    name: Stripe Settlements
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create adyen confirmation transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${adyen_account}
+    config:
+      account_id: ${adyen_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${adyen_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - refund
+          debit_values:
+          - settled
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Merchant Reference from Adyen Confirmation
+          field_name: metadata.merchant_reference
+          field_type: string
+          identifier: merchant_reference
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: merchant_reference
+          transformation_rules: []
+      processing_mode: confirmation
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Merchant Reference must be unique across all transactions
+    name: Adyen Confirmations
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create adyen transaction transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${adyen_account}
+    config:
+      account_id: ${adyen_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${adyen_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - settled
+          debit_values:
+          - refund
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Settlement ID from Adyen Settlement
+          field_name: metadata.settlement_id
+          field_type: string
+          identifier: settlement_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: settlement_id
+          transformation_rules: []
+      processing_mode: transaction
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Settlement Id must be unique across all transactions
+    name: Adyen Settlements
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create bank transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${bank_account}
+    config:
+      account_id: ${bank_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${bank_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - credit
+          debit_values:
+          - debit
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Batch Id from Bank
+          field_name: metadata.batch_id
+          field_type: string
+          identifier: batch_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: batch_id
+          transformation_rules: []
+      processing_mode: confirmation
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Batch Id must be unique across all transactions
+    name: Bank Statements
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create OMS - Stripe recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 1
+    rule_description: Reconciliation between OMS and Stripe
+    rule_name: OMS <-> Stripe
+    sources:
+    - account_id: ${oms_account}
+      trigger:
+        field: metadata.psp_type
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: Stripe
+    targets:
+    - account_id: ${stripe_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: order_id
+        target_field: order_id
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create OMS - Adyen recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 2
+    rule_description: Reconciliation between OMS and Adyen
+    rule_name: OMS <-> Adyen
+    sources:
+    - account_id: ${oms_account}
+      trigger:
+        field: metadata.psp_type
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: Adyen
+    targets:
+    - account_id: ${adyen_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: order_id
+        target_field: order_id
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create Stripe - Bank recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 3
+    rule_description: Reconciliation between Stripe and Bank
+    rule_name: Stripe <-> Bank
+    sources:
+    - account_id: ${stripe_account}
+      trigger:
+        field: currency
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: USD
+    targets:
+    - account_id: ${bank_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: order_id
+        target_field: order_id
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create Adyen - Bank recon rule
+  method: POST
+  endpoint: /recon_rules
+  payload:
+    priority: 4
+    rule_description: Reconciliation between Adyen and Bank
+    rule_name: Adyen <-> Bank
+    sources:
+    - account_id: ${adyen_account}
+      trigger:
+        field: currency
+        operator:
+          operator_version: v1
+          value: equals
+        trigger_version: v1
+        value: USD
+    targets:
+    - account_id: ${bank_account}
+      match_rules:
+        match_version: v1
+        rules:
+        - operator: equals
+          source_field: amount
+          target_field: amount
+        - operator: equals
+          source_field: currency
+          target_field: currency
+      search_identifier:
+        search_version: v1
+        source_field: order_id
+        target_field: order_id
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null

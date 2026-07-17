@@ -1,0 +1,38 @@
+variables:
+  #accounts:
+  life3_account: account_mvfojvnwP7Fnoj8O6Rli
+  gdpp_account: account_cSaObKC2mxQ9g583tjDv
+  adyen_settlement_account: account_go1Z21lYHzKZd7R7ilqb
+  adyen_balance_account: account_XH3X0htxVGEiwYY0LTgk
+  bank_account: account_25Ufayj8iML4LwQPBgI5
+
+  #ingestion configs:
+  life3_manual_ingestion_id: ing_OgbO7029ScpCHIhLxQ6H
+  gdpp_manual_ingestion_id: ing_jVQB6iwHNUDXKb4KXhA9
+  adyen_settlement_manual_ingestion_id: ing_o0VsDg9PuOZq5bPx0Cxz
+  adyen_balance_manual_ingestion_id: ing_07GPZP9dDfaClW3tuh4x
+  bank_manual_ingestion_id: ing_zb4xuqSimCutt7O2oUwh
+
+  #transformation ids:
+  life3_transformation_id: tran_conf_EZGZHfOGmijJIh4Da6PM
+  gdpp_payments_confirmation_id: tran_conf_pOflgyNAllDiTErHc2No
+  gdpp_payments_transaction_id: tran_conf_hVzpUXJZp9KXMF1kpcML
+  adyen_settlements_payments_confirmation_id: tran_conf_XD54QOOTF6Y9CgcnMsf9
+  adyen_settlements_payments_transaction_id: tran_conf_ZwY7TMa5igEKo4fbwPYF
+  balance_platform_balance_adjustment_confirmation_id: tran_conf_8ezvlSJMokRwknMcNkj8
+  balance_platform_transaction_id: tran_conf_HzWRFd2ljxAhQUNUiY5s
+  bank_credits_confirmation_id: tran_conf_vtuAaZ1AcrSOQHE7DMnx
+  bank_debits_confirmation_id: 
+
+  # rule ids:
+  life3_gdpp_rule_id: 
+  gdpp_adyen_settlement_rule_id: rule_b1N6IqL1PufiRN58LwRY
+  adyen_settlement_balance_rule_id: rule_RR52WSn1aOahx70sekAj
+  balance_platform_bank_rule_id: rule_tDXhc3NVXXD3FnQ64TbO
+
+  gdpp_payouts_manual_ingestion_id: ing_Ri2MdgI7r5jy5xm3Ejul
+  merchant_id: merchant_1778137542
+  gdpp_payouts_adyen_balance_rule_id: rule_zrraFlb9p22Jw6IIvVV8
+  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiODg5NjQ2N2YtYjcxOS00NGM4LWE5ZDAtMDA5OWVlYjcwYWZlIiwibWVyY2hhbnRfaWQiOiJtZXJjaGFudF8xNzc4MTM3NTQyIiwicm9sZV9pZCI6Im9yZ19hZG1pbiIsImV4cCI6MTc3OTA0NDYyNCwib3JnX2lkIjoib3JnXzZMMlFOQmxRTGN6WUtXa1hSdDQ5IiwicHJvZmlsZV9pZCI6InByb19US1RhU0hpT0RhUTN0ZDVwMVpRZiIsInRlbmFudF9pZCI6InB1YmxpYyJ9.NZIQaKfWyo_bxemkno1N-qVVv4L_twQmG54bUjJNZuM
+  gdpp_refunds_manual_ingestion_id: ing_sjJiLw2soYiaSXnoAmRi
+  profile_id: pro_TKTaSHiODaQ3td5p1ZQf

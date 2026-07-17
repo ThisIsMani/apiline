@@ -1,0 +1,600 @@
+variables:
+  stripe_fee_account: account_NnKg7yv0LZ6DCZHPaKpB
+  merchant_id: merchant_1768571891
+  stripe_account: account_fiCX9vN1a1fUh3Y4X4VC
+  bank_account: account_OkLr2f8LTxamL4OjIz1Z
+  stripe_fees_manual_ingestion_id: ing_3YadARSsiPifzh3O84c2
+  stripe_manual_ingestion_id: ing_SUoK1shTYV9xb7S1OYLW
+  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXJjaGFudF9pZCI6Im1lcmNoYW50XzE3Njg1NzE4OTEiLCJwcm9maWxlX2lkIjoicHJvX1BtRXRzdm9Bek1WUVdNTWt1ZXdpIiwiZXhwIjoxNzY4OTk5ODEzfQ.igkXDtH9IMXAuQ5-MPXt5HXlkvI5W05NRw6m7FL9KOA
+  bank_manual_ingestion_id: ing_9KgxsRDoPxHICj73WaKJ
+  oms_manual_ingestion_id: ing_rj0mKtj3S7plVmdQpXko
+  profile_id: pro_PmEtsvoAzMVQWMMkuewi
+  oms_account: account_ZwS6iaWCEPsyAhikakEJ
+requests:
+- name: Bootstrap
+  method: POST
+  endpoint: /auth/bootstrap_with_ids
+  payload:
+    merchant_name: "Aman Test"
+    profile_name: "Aman Test 2"
+    merchant_id: ${merchant_id}
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 200
+  save_as: null
+  extract_path: null
+  save_multiple: null
+  
+- name: Generate JWT token
+  method: POST
+  endpoint: /auth/generate_token
+  payload:
+    merchant_id: ${merchant_id}
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 200
+  save_as: jwt_token
+  extract_path: $.token
+  save_multiple: null
+- name: Create OMS Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: QuarterHill OMS
+    account_type: credit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: oms_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Stripe Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Stripe
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: stripe_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Stripe Fees Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Stripe Fees
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: stripe_fee_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create Bank Account
+  method: POST
+  endpoint: /accounts
+  payload:
+    account_name: Bank
+    account_type: debit
+    currency: USD
+    initial_balance: 0.0
+  auth: jwt
+  expected_status: 201
+  save_as: bank_account
+  extract_path: $.account_id
+  save_multiple: null
+- name: Create oms manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${oms_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: OMS Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: oms_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create stripe manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${stripe_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Stripe Settlement Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: stripe_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create stripe fees manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${stripe_fee_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: QuarterHill Stripe Fees Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: stripe_fees_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create bank manual ingestion
+  method: POST
+  endpoint: /ingestions/config
+  payload:
+    account_id: ${bank_account}
+    config:
+      manual: null
+    is_active: true
+    merchant_id: ${merchant_id}
+    name: Bank Statement Manual Upload
+    profile_id: ${profile_id}
+  auth: admin
+  expected_status: 201
+  save_as: bank_manual_ingestion_id
+  extract_path: $.ingestion_id
+  save_multiple: null
+- name: Create OMS transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${oms_account}
+    config:
+      account_id: ${oms_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${oms_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_config: null
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - paid
+          debit_values:
+          - refunded
+          identifier: status
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: invoice_date
+        metadata_fields:
+        - description: Toll Transaction ID from OMS
+          field_name: metadata.toll_txn_id
+          field_type: string
+          identifier: toll_txn_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        - description: PSP Type from OMS
+          field_name: metadata.psp_type
+          field_type: string
+          identifier: psp_type
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 1
+          - validation_rule_type: max_length
+            value: 50
+        - description: Vehicle Number from OMS
+          field_name: metadata.vehicle_number
+          field_type: string
+          identifier: vehicle_number
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 1
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: toll_txn_id
+          transformation_rules: []
+      processing_mode: transaction
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Toll transaction id must be unique
+    name: OMS Transactions
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create stripe confirmation transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${stripe_account}
+    config:
+      account_id: ${stripe_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${stripe_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - refund
+          debit_values:
+          - settled
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Merchant Reference from Stripe Confirmation
+          field_name: metadata.merchant_reference
+          field_type: string
+          identifier: merchant_reference
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: merchant_reference
+          transformation_rules: []
+      processing_mode: confirmation
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Merchant Reference must be unique across all transactions
+    name: Stripe Confirmations
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create stripe transaction transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${stripe_account}
+    config:
+      account_id: ${stripe_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${stripe_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - settled
+          debit_values:
+          - refund
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Settlement ID from Stripe Settlement
+          field_name: metadata.settlement_id
+          field_type: string
+          identifier: settlement_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        - description: Merchant Reference from Stripe Confirmation
+          field_name: metadata.merchant_reference
+          field_type: string
+          identifier: merchant_reference
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: merchant_reference
+          transformation_rules: []
+      processing_mode: transaction
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Settlement Id must be unique across all transactions
+    name: Stripe Settlements
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create PSP Fee confirmation transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${stripe_fee_account}
+    config:
+      account_id: ${stripe_fee_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${stripe_fees_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: fee_amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - refunded
+          debit_values:
+          - charged
+          identifier: fee_type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: fee_date
+        metadata_fields:
+        - description: Fee ID from PSP Fee
+          field_name: metadata.fee_id
+          field_type: string
+          identifier: fee_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        - description: Merchant Reference from Stripe
+          field_name: metadata.merchant_reference
+          field_type: string
+          identifier: merchant_reference
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: merchant_reference
+          transformation_rules: []
+      processing_mode: confirmation
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Merchant Reference must be unique across all transactions
+    name: PSP Fee Confirmations
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create bank transformation
+  method: POST
+  endpoint: /transformations/v2/configs
+  payload:
+    account_id: ${bank_account}
+    config:
+      account_id: ${bank_account}
+      merchant_id: ${merchant_id}
+      parsing_config:
+        file_format: csv
+      profile_id: ${profile_id}
+    ingestion_id: ${bank_manual_ingestion_id}
+    is_active: true
+    metadata_schema_data:
+      fields:
+        amount:
+          identifier: amount
+          unit_type: minor_unit
+          validation_rules: []
+        balance_direction:
+          credit_values:
+          - credit
+          debit_values:
+          - debit
+          identifier: type
+        currency:
+          identifier: currency
+        effective_at:
+          date_time_format:
+            date_format:
+              delimiter: hyphen
+              order: day_month_year
+            time_format: null
+          identifier: settlement_date
+        metadata_fields:
+        - description: Batch Id from Bank
+          field_name: metadata.batch_id
+          field_type: string
+          identifier: batch_id
+          required: true
+          transformation_rules: []
+          validation_rules:
+          - validation_rule_type: min_length
+            value: 3
+          - validation_rule_type: max_length
+            value: 50
+        order_id:
+          identifier: batch_id
+          transformation_rules: []
+      processing_mode: confirmation
+      schema_type: basic_schema_data
+      unique_constraint:
+        constraint_type:
+          field_name: order_id
+          unique_constraint_type: single_field
+        description: Batch Id must be unique across all transactions
+    name: Bank Statements
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create OMS - Stripe + Fee recon rule
+  method: POST
+  endpoint: /recon_rules/v2
+  payload:
+    priority: 1
+    rule_description: Reconciliation between OMS and Stripe + Fee
+    rule_name: OMS <-> Stripe + Fee
+    strategy:
+      one_to_many_type: single_single
+      recon_strategy_type: one_to_many
+      source_account:
+        account_id: ${oms_account}
+        trigger:
+          field: metadata.psp_type
+          operator:
+            operator_version: v1
+            value: equals
+          trigger_version: v1
+          value: Stripe
+      target_accounts:
+        split_type: percentage
+        targets:
+        - - account_id: ${stripe_account}
+            match_rules:
+              match_version: v1
+              rules:
+              - operator: equals
+                source_field: amount
+                target_field: amount
+              - operator: equals
+                source_field: currency
+                target_field: currency
+            search_identifier:
+              search_version: v1
+              source_field: order_id
+              target_field: order_id
+          - value: 95.0
+        - - account_id: ${stripe_fee_account}
+            match_rules:
+              match_version: v1
+              rules:
+              - operator: equals
+                source_field: amount
+                target_field: amount
+              - operator: equals
+                source_field: currency
+                target_field: currency
+            search_identifier:
+              search_version: v1
+              source_field: order_id
+              target_field: order_id
+          - value: 5.0
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
+- name: Create Stripe - Bank recon rule
+  method: POST
+  endpoint: /recon_rules/v2
+  payload:
+    priority: 2
+    rule_description: Reconciliation between Stripe and Bank
+    rule_name: Stripe <-> Bank
+    strategy:
+      match_rules:
+        match_version: v1
+        rules: []
+      one_to_one_type: many_single
+      recon_strategy_type: one_to_one
+      search_identifier:
+        search_version: v1
+        source_field: metadata.settlement_id
+        target_field: order_id
+      source_account:
+        account_id: ${stripe_account}
+        grouping_field: metadata.settlement_id
+        trigger:
+          field: currency
+          operator:
+            operator_version: v1
+            value: equals
+          trigger_version: v1
+          value: USD
+      target_account:
+        account_id: ${bank_account}
+  auth: jwt
+  expected_status: 201
+  save_as: null
+  extract_path: null
+  save_multiple: null
