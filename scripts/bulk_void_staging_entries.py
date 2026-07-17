@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Command to run: python3 void_staging_entries.py staging_ids.csv --base-url http://YOUR_IP:PORT --token 'YOUR_JWT' --reason 'Bulk void from CSV'"""
 """Bulk-void staging entries listed in a single-column CSV file."""
 
 from __future__ import annotations
