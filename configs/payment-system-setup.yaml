@@ -5,7 +5,7 @@
 variables:
   merchant_id: "demo_merchant"
   profile_id: "demo_profile"
-  jwt_token: ""  # Will be populated by the first request
+  jwt_token: {{jwt_token}}
   oms_account: ""
   stripe_account: ""
   adyen_account: ""

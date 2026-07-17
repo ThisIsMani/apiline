@@ -5,7 +5,7 @@ variables:
   bank_account: account_OkLr2f8LTxamL4OjIz1Z
   stripe_fees_manual_ingestion_id: ing_3YadARSsiPifzh3O84c2
   stripe_manual_ingestion_id: ing_SUoK1shTYV9xb7S1OYLW
-  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXJjaGFudF9pZCI6Im1lcmNoYW50XzE3Njg1NzE4OTEiLCJwcm9maWxlX2lkIjoicHJvX1BtRXRzdm9Bek1WUVdNTWt1ZXdpIiwiZXhwIjoxNzY4OTk5ODEzfQ.igkXDtH9IMXAuQ5-MPXt5HXlkvI5W05NRw6m7FL9KOA
+  jwt_token: {{jwt_token}}
   bank_manual_ingestion_id: ing_9KgxsRDoPxHICj73WaKJ
   oms_manual_ingestion_id: ing_rj0mKtj3S7plVmdQpXko
   profile_id: pro_PmEtsvoAzMVQWMMkuewi

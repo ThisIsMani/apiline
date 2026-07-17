@@ -4,7 +4,7 @@ variables:
   bank_manual_ingestion_id: ''
   oms_account: ''
   stripe_manual_ingestion_id: ''
-  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXJjaGFudF9pZCI6Inp1cmljaF9yZWNvbl9kZW1vIiwicHJvZmlsZV9pZCI6InByb19lbUJiUkk1VU9QcXp4VWt0RlR1QyIsImV4cCI6MTc2MDE4NDExNX0.GusInbTY3KOOy44LcNhxg_vYVHyNS8HyeeQl0qa5WsI
+  jwt_token: {{jwt_token}}
   bank_account: ''
   adyen_account: ''
   profile_id: pro_emBbRI5UOPqzxUktFTuC

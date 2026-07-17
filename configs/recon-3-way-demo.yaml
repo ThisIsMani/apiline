@@ -6,7 +6,7 @@ variables:
   stripe_manual_ingestion_id: ing_zdaFDeiYP5ZXLRsP1Sml
   merchant_id: merchant_1768821064
   stripe_account: account_tWgr6B89YGH1mn4Hh3yN
-  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXJjaGFudF9pZCI6Im1lcmNoYW50XzE3Njg4MjEwNjQiLCJwcm9maWxlX2lkIjoicHJvXzl1b1M2OUdZWlZMWGcwVUU0M3pVIiwiZXhwIjoxNzY4OTEwMzg5fQ.rwiy1DQZyUFtxC2gG18RLfVVaGStU3eKjbQObXld-6M
+  jwt_token: {{jwt_token}}
   profile_id: pro_9uoS69GYZVLXg0UE43zU
   bank_manual_ingestion_id: ing_EnthDpsXT4OqnXEizTF0
   adyen_account: account_f91gl8awA9jYkfFMAC1R

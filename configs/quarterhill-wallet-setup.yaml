@@ -1,6 +1,6 @@
 variables:
   bank_ingestion_id: ing_iBxv4RWmsRCO5TqUVkyU
-  jwt_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXJjaGFudF9pZCI6Im1lcmNoYW50XzE3Njg1NzE4OTEiLCJwcm9maWxlX2lkIjoicHJvX2pyZmtoUWwwY2ZxQ1hTQndVZUZCIiwiZXhwIjoxNzY5MDAyMjQzfQ.jHoBNVCGso2sV-N4XjdE_9Nt_sniL_MMdBcJDbo0Jxo
+  jwt_token: {{jwt_token}}
   psp_ingestion_id: ing_UKECzqIn4PKKcn4mwRnk
   wallet_ingestion_id: ing_nLXXkpy64uAPXZaNytGn
   bank_account: account_UtXO8xaJvSaJ3kYG57pm
