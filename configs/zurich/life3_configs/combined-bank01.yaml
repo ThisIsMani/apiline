@@ -18,7 +18,7 @@ variables:
   adyen_settlements_payments_confirmation_id: tran_conf_BF6LRdQ2owsqPDgTcYpA
   adyen_settlement_account: account_ecg20lK5onH2A5zMXEwE
   gdpp_payments_transaction_id: tran_conf_I46Qt7UNkUwNvHc4PcM0
-  merchant_id: merchant_1780919016
+  merchant_id: merchant_1777323253
   adyen_settlement_balance_rule_id: rule_Cdf7Gz0klLxDZltfnHZZ
   gdpp_account: account_Bgg3p6UktGZa0KF3QziA
   bank_account: account_bZunmysaTt4xVYiu6LhQ
@@ -27,7 +27,7 @@ variables:
   gdpp_manual_ingestion_id: ing_ML8EP2pVH9hi4yAAo6sw
   adyen_settlements_payments_transaction_id: tran_conf_aJjUED5ZDsp7RAWn9G6d
   bank_credits_confirmation_id: tran_conf_W8HJeeLSgwELfe7oEYjp
-  profile_id: pro_v3v4l2bfkamY2VxlUiml
+  profile_id: pro_nRLqiFFLMC7aQVHuBSmI
   bank_debits_confirmation_id: 
   gdpp_payouts_manual_ingestion_id: ing_sHJ7ORxeqmhDZl246oEY
 requests:

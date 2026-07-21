@@ -6,9 +6,9 @@ variables:
   gdpp_payouts_adyen_balance_rule_id: rule_0HYwD6k8A900dfgeOys0
   bank_manual_ingestion_id: ing_Csk1AOxvuqNYhRlWwWL8
   life3_manual_ingestion_id: ing_wdPD0wGjVE0idUZdXUvL
-  profile_id: pro_v3v4l2bfkamY2VxlUiml
+  profile_id: pro_Th919HNvXYgfEYvKHgHt
   adyen_settlement_account: account_3OoIs49Ua8D4u943785E
-  merchant_id: merchant_1780919016
+  merchant_id: merchant_1777323253
   life3_gdpp_rule_id: rule_qOGdQLesRKqtjeapBSSi
   bank_credits_confirmation_id: tran_conf_WH4abnp0g8Ix0t381rtx
   life3_transformation_id: tran_conf_LYmLc65VO59SsQu0P7Cl
