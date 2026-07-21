@@ -6703,7 +6703,7 @@ requests:
       fields:
         amount:
           delimiter: dot
-          identifier: Gross Debit (GC)
+          identifier: Net Debit (NC)
           transformation_rules:
           - transformation_rule_type: trim
           unit_type: major_unit
@@ -7262,7 +7262,7 @@ requests:
       fields:
         amount:
           delimiter: dot
-          identifier: Gross Credit (GC)
+          identifier: Net Credit (NC)
           transformation_rules:
           - transformation_rule_type: trim
           unit_type: major_unit
