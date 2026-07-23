@@ -4853,7 +4853,6 @@ requests:
           - transformation_rule_type: trim
           validation_rules: []
         - description: GDPP TRANS DESC
-          expose: true
           field_name: metadata.gdpp_trans_desc
           field_type: string
           identifier: GDPP TRANS DESC
@@ -8954,6 +8953,7 @@ requests:
     rule_name: Adyen Settlement <-> Balance Platform
     priority: 4
     strategy:
+      greedy_transaction_pulling: true
       match_rules:
         match_version: v1
         rules: []
