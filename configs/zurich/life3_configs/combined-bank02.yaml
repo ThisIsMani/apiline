@@ -1,35 +1,48 @@
 variables:
-  adyen_balance_manual_ingestion_id: ing_sre200sjA6x91IiQZSEG
-  balance_platform_transaction_id: tran_conf_cZRWGGg4s4jMh0BZs0Au
-  gdpp_payments_confirmation_id: tran_conf_fbkPf6RcT4h8kDxeq15m
-  adyen_settlement_manual_ingestion_id: ing_mTqudp3nB8dT6RHuXlD0
-  gdpp_payouts_adyen_balance_rule_id: rule_0HYwD6k8A900dfgeOys0
-  bank_manual_ingestion_id: ing_Csk1AOxvuqNYhRlWwWL8
-  life3_manual_ingestion_id: ing_wdPD0wGjVE0idUZdXUvL
-  profile_id: pro_Th919HNvXYgfEYvKHgHt
-  adyen_settlement_account: account_3OoIs49Ua8D4u943785E
+  jwt_token:
   merchant_id: merchant_1777323253
-  life3_gdpp_rule_id: rule_qOGdQLesRKqtjeapBSSi
-  bank_credits_confirmation_id: tran_conf_WH4abnp0g8Ix0t381rtx
-  life3_transformation_id: tran_conf_LYmLc65VO59SsQu0P7Cl
-  gdpp_payouts_manual_ingestion_id: ing_3805ZwMPzE9PelAKwKib
-  gdpp_adyen_settlement_rule_id: rule_llBuCqbaeXy10HKV0lmH
-  balance_platform_bank_rule_id: rule_75qjuUpzxUMEJd17H49v
-  gdpp_manual_ingestion_id: ing_ZP2i1fa2IEUzsrjpFAhR
-  gdpp_payments_transaction_id: tran_conf_L9Cpcs28zSd20C1HrgAL
-  gdpp_account: account_2QAUVu2jNDRO6UiVV23n
-  bank_account: account_lS4fFcs1oLvMtLHLqYni
-  life3_account: account_cry0awrHeIVhIdTBgrH5
-  adyen_settlements_payments_transaction_id: tran_conf_sUPyd41pKqa5bTBGOzcV
-  jwt_token: {{jwt_token}}
-  gdpp_refunds_manual_ingestion_id: ing_NHAUe0TpafIX9NcAOpL7
-  adyen_balance_account: account_AxKOxAeW5qg9VRccB4A1
-  adyen_settlement_balance_rule_id: rule_xelaP8qiMkxEUjeaW4af
-  profile_name: Bank 01
-  bank_debits_confirmation_id: 
-  balance_platform_balance_adjustment_confirmation_id: tran_conf_r0ZczXNsfBfUhe7Ao2GS
-  adyen_settlements_payments_confirmation_id: tran_conf_KHS5PSEIYcE5GluSYn5I
-  merchant_name: AU BU Recon
+  merchant_name: BU AU Life Recon
+  profile_id: pro_Th919HNvXYgfEYvKHgHt
+  profile_name: Bank 02
+
+  life3_account: account_ZnSgY5iFnEh92eY1sYLK
+  gdpp_account: account_V9tNA9NCeaKr1r4VBS1Q
+  adyen_settlement_account: account_IcvsWAtSRJX5ujrDXI3v
+  adyen_balance_account: account_jce17eocR1hicnFfFwef
+  bank_account: account_1BlFIWJBWtXGmyYfdJ9M
+
+  life3_manual_ingestion_id: ing_xNLyZ9vKpY1ydjpU7u4Z
+  adhoc_manual_ingestion_id: ing_8inhrl02y9E5q2Kucb8z
+  gdpp_manual_ingestion_id: ing_Hd1hkBSK8sNTs9xarp0x
+  gdpp_refunds_manual_ingestion_id: ing_SiW4uxsEr0J35rs55uvk
+  gdpp_payouts_manual_ingestion_id: ing_8GH0D9quv2HjCguccDXA
+  adyen_settlement_manual_ingestion_id: ing_OcUodqUhfkX8kGz8B8iS
+  adyen_balance_manual_ingestion_id: ing_vtYuz2rZRxToWAQuXpmE
+  bank_manual_ingestion_id: ing_qHyXEiySUJ0wafYQE6vJ
+
+  life3_transformation_id: tran_conf_Nst7TaxLZ7x4k10okqpK
+  adhoc_transformation_id: tran_conf_8uAM1i0teIgSXwahMEIa
+  gdpp_payments_confirmation_id: tran_conf_FCjGaw4KYEAMWvXA4sDK
+  gdpp_refunds_confirmation_id: tran_conf_en6A0objPUj2JGFBWc3u
+  gdpp_payouts_confirmation_id: tran_conf_mtw6BKlRi3ej8h25j1jo
+  gdpp_payments_transaction_id: tran_conf_GwywjyXfnS9kQAqQncaz
+  gdpp_refunds_transaction_id: tran_conf_zV9OS00eGPfzBFPFIaMA
+  gdpp_payouts_transaction_id: tran_conf_kZGSlIvKzUevi5ctZHJe
+  adyen_settlement_payment_confirmation_id: tran_conf_jezRge4pXl2C7dDhGmGo
+  adyen_settlement_refund_confirmation_id: tran_conf_7lDRfoSjiXnVBxvCUtLI
+  adyen_settlement_payment_transaction_id: tran_conf_zZOFrlMbRHJmPPwqoR3E
+  adyen_settlement_refund_transaction_id: tran_conf_OH63s2cCTFXCvuCxPHT8
+  balance_platform_balance_adj_confirmation_id: tran_conf_rw9ISQXCbDHfH1LyqSB2
+  balance_platform_card_confirmation_id: tran_conf_uouhTS58ikSffHTrl0np
+  balance_platform_bank_transaction_id: tran_conf_AFwtXnA7svE4k85U8gSh
+  bank_credits_confirmation_id: tran_conf_QpelXNNZrxbHyLAKE8NT
+  bank_debits_confirmation_id: tran_conf_HOTmOLx5f3XyeQwCjI1S
+
+  life3_gdpp_rule_id: rule_JjierICWM9xK1NglfmA4
+  gdpp_adyen_settlement_rule_id: rule_44tf3fiq2ay05WihZ9JU
+  gdpp_payouts_adyen_balance_rule_id: rule_WlClCJWimODlwSnTuU8i
+  adyen_settlement_balance_rule_id: rule_awYgdJi3tZRHy48tkraf
+  balance_platform_bank_rule_id: rule_oYyxM0foiIIO2WBUxKnF
 requests:
 
 # Accounts
